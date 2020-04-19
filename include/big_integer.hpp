@@ -4,7 +4,7 @@
 
 #include "big_unsigned.hpp"
 
-namespace ntlib {
+namespace bigint {
 
 /**
  * Represents a whole number whose size is only limited by the available memory.
@@ -615,10 +615,10 @@ private:
    * Returns the magnitude of a number.
    *
    * @param n The number.
-   * @return Its magnitude, abs(n).
+   * @return The number itself.
    */
   static uint64_t get_magnitude(uint64_t n) {
-    return abs(n);
+    return n;
   }
 
   /**

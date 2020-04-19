@@ -1,233 +1,220 @@
-#include <cassert>
-#include <cstdio>
-#include <iostream>
-#include <string>
-#include <utility>
+#include <gtest/gtest.h>
 
 #include "big_integer.hpp"
 
-void test_initialization() {
-  // Default constructor.
-  ntlib::big_integer a;
-
-  // Construct by unsigned int.
-  ntlib::big_integer b(5);
-
-  // Construct by string.
-  ntlib::big_integer c("12345678910111213141516171819");
-
-  // Copy construction.
-  ntlib::big_integer d(c);
-
-  // Copy assignment.
-  a = c;
-
-  // Move construction.
-  ntlib::big_integer f(std::move(b));
-
-  // Move assignment.
-  b = std::move(c);
+TEST(Initialization, DefaultConstructor) {
+  bigint::big_integer a;
+  EXPECT_EQ(a, 0);
 }
 
-void test_to_string() {
-  ntlib::big_integer a("-123456789101112");
-  assert(a.to_string() == "-123456789101112");
-  assert(a.to_string(2) == "-11100000100100010000110000011110011101000111000");
-  assert(a.to_string(16) == "-7048860F3A38");
-
-  ntlib::big_integer b("11100000100100010000110000011110011101000111000", 2);
-  assert(b.to_string() == "123456789101112");
-  assert(b.to_string(2) == "11100000100100010000110000011110011101000111000");
-  assert(b.to_string(16) == "7048860F3A38");
+TEST(Initialization, ConstructByInt) {
+  bigint::big_integer a(5);
+  EXPECT_EQ(a, 5);
 }
 
-void test_comparison() {
- ntlib::big_integer a("12345678910111213141516171819");
- ntlib::big_integer b("-12345678910111213141516171819");
- ntlib::big_integer c("12345678910111213141516171819");
- assert(a == a);
- assert(a == c);
- assert(a != b);
- assert(a > b);
- assert(b < a);
- assert(a >= b);
- assert(b <= a);
- assert(a <= c);
- assert(c >= a);
+TEST(Initialization, ConstructByString) {
+  bigint::big_integer a("12345678910111213141516171819");
+  EXPECT_EQ(a.to_string(), "12345678910111213141516171819");
 }
 
-void test_addition() {
+TEST(Initialization, Copy) {
+  bigint::big_integer a(5);
+  bigint::big_integer b(a);
+  EXPECT_EQ(b, 5);
+
+  bigint::big_integer c;
+  c = a;
+  EXPECT_EQ(c, 5);
+}
+
+TEST(Initialization, Move) {
+  bigint::big_integer a(5);
+  bigint::big_integer b(std::move(a));
+  EXPECT_EQ(b, 5);
+
+  bigint::big_integer c(5);
+  bigint::big_integer d;
+  d = std::move(c);
+  EXPECT_EQ(d, 5);
+}
+
+TEST(StringConversion, Base10) {
+  bigint::big_integer a("-123456789101112");
+  EXPECT_EQ(a.to_string(), "-123456789101112");
+  EXPECT_EQ(a.to_string(2), "-11100000100100010000110000011110011101000111000");
+  EXPECT_EQ(a.to_string(16), "-7048860F3A38");
+}
+
+TEST(StringConversion, Base2) {
+  bigint::big_integer b("11100000100100010000110000011110011101000111000", 2);
+  EXPECT_EQ(b.to_string(), "123456789101112");
+  EXPECT_EQ(b.to_string(2), "11100000100100010000110000011110011101000111000");
+  EXPECT_EQ(b.to_string(16), "7048860F3A38");
+}
+
+TEST(Arithmetic, Addition) {
   // Exactly at the overflow boundary for a classical 32 bit unsigned int.
-  ntlib::big_integer a(-4294967295);
-  ntlib::big_integer b(-1);
+  bigint::big_integer a(-4294967295);
+  bigint::big_integer b(-1);
 
-  ntlib::big_integer a_plus_b = a + b;
-  assert(a_plus_b.to_string() == "-4294967296");
-  ntlib::big_integer a_plus_1 = a + 1u;
-  assert(a_plus_1.to_string() == "-4294967294");
+  bigint::big_integer a_plus_b = a + b;
+  EXPECT_EQ(a_plus_b.to_string(), "-4294967296");
+  bigint::big_integer a_plus_1 = a + 1u;
+  EXPECT_EQ(a_plus_1.to_string(), "-4294967294");
   a_plus_1 = 1u + a;
-  assert(a_plus_1.to_string() == "-4294967294");
+  EXPECT_EQ(a_plus_1.to_string(), "-4294967294");
 
-  ntlib::big_integer c;
+  bigint::big_integer c;
   c += a;
-  assert(c.to_string() == "-4294967295");
+  EXPECT_EQ(c.to_string(), "-4294967295");
   c += 1;
-  assert(c.to_string() == "-4294967294");
+  EXPECT_EQ(c.to_string(), "-4294967294");
 
-  assert((a++).to_string() == "-4294967295");
-  assert(a.to_string() == "-4294967294");
-  assert((++a).to_string() == "-4294967293");
+  EXPECT_EQ((a++).to_string(), "-4294967295");
+  EXPECT_EQ(a.to_string(), "-4294967294");
+  EXPECT_EQ((++a).to_string(), "-4294967293");
 
-  ntlib::big_integer d(0);
-  ntlib::big_integer e(0);
-  assert((d + e).to_string() == "0");
-  assert((d + 0).to_string() == "0");
-  assert((0 + e).to_string() == "0");
+  bigint::big_integer d(0);
+  bigint::big_integer e(0);
+  EXPECT_EQ((d + e).to_string(), "0");
+  EXPECT_EQ((d + 0).to_string(), "0");
+  EXPECT_EQ((0 + e).to_string(), "0");
 }
 
-void test_subtraction() {
+TEST(Arithmetic, Subtraction) {
   // Exactly at the overflow boundary for a classical 32 bit unsigned int.
-  ntlib::big_integer a("4294967296");
-  ntlib::big_integer b(1);
-  ntlib::big_integer c;
+  bigint::big_integer a("4294967296");
+  bigint::big_integer b(1);
+  bigint::big_integer c;
 
-  assert((a - b).to_string() == "4294967295");
-  assert((a - 1).to_string() == "4294967295");
+  EXPECT_EQ((a - b).to_string(), "4294967295");
+  EXPECT_EQ((a - 1).to_string(), "4294967295");
 
-  assert((b - a).to_string() == "-4294967295");
-  assert((c - b).to_string() == "-1");
-  assert((c - 1).to_string() == "-1");
+  EXPECT_EQ((b - a).to_string(), "-4294967295");
+  EXPECT_EQ((c - b).to_string(), "-1");
+  EXPECT_EQ((c - 1).to_string(), "-1");
 
-  assert((a - 0).to_string() == "4294967296");
-  assert((c - 0).to_string() == "0");
+  EXPECT_EQ((a - 0).to_string(), "4294967296");
+  EXPECT_EQ((c - 0).to_string(), "0");
 
-  assert((a -= c).to_string() == "4294967296");
-  assert((b -= 1).to_string() == "0");
+  EXPECT_EQ((a -= c).to_string(), "4294967296");
+  EXPECT_EQ((b -= 1).to_string(), "0");
 
-  assert((a--).to_string() == "4294967296");
-  assert(a.to_string() == "4294967295");
-  assert((--a).to_string() == "4294967294");
+  EXPECT_EQ((a--).to_string(), "4294967296");
+  EXPECT_EQ(a.to_string(), "4294967295");
+  EXPECT_EQ((--a).to_string(), "4294967294");
 }
 
-void test_multiplication() {
-  ntlib::big_integer fac100 = 1;
+TEST(Arithmetic, Multiplication) {
+  bigint::big_integer fac100 = 1;
   for (uint32_t i = 2; i <= 100; ++i) {
     fac100 *= i;
   }
-  assert(fac100.to_string() == "93326215443944152681699238856266700490715968264"
-      "381621468592963895217599993229915608941463976156518286253697920827223758"
-      "251185210916864000000000000000000000000");
+  EXPECT_EQ(fac100.to_string(), "9332621544394415268169923885626670049071596826"
+      "438162146859296389521759999322991560894146397615651828625369792082722375"
+      "8251185210916864000000000000000000000000");
 
-  assert((fac100 * fac100).to_string() == "870978248908948007941659016194448586"
-      "556972064394084013421593253624337999634658332587796709633275492064469038"
-      "076221960747636428941143592019057396067750788139460748990533172975801343"
-      "299298718476460737588943431348338296680151515628085416269176619573749317"
-      "3453603519594496000000000000000000000000000000000000000000000000");
+  EXPECT_EQ((fac100 * fac100).to_string(), "87097824890894800794165901619444858"
+      "655697206439408401342159325362433799963465833258779670963327549206446903"
+      "807622196074763642894114359201905739606775078813946074899053317297580134"
+      "329929871847646073758894343134833829668015151562808541626917661957374931"
+      "73453603519594496000000000000000000000000000000000000000000000000");
 
-  assert((fac100 * 0).to_string() == "0");
-  assert((0 * fac100).to_string() == "0");
-  ntlib::big_integer zero;
-  assert((fac100 * zero).to_string() == "0");
-  assert((zero * fac100).to_string() == "0");
-  assert((zero * zero).to_string() == "0");
+  EXPECT_EQ((fac100 * 0).to_string(), "0");
+  EXPECT_EQ((0 * fac100).to_string(), "0");
+  bigint::big_integer zero;
+  EXPECT_EQ((fac100 * zero).to_string(), "0");
+  EXPECT_EQ((zero * fac100).to_string(), "0");
+  EXPECT_EQ((zero * zero).to_string(), "0");
 }
 
-void test_division() {
-  ntlib::big_integer fac50("30414093201713378043612608166064768844377641568960"
-      "512000000000000");
-  ntlib::big_integer fac100("8709782489089480079416590161944485865569720643940"
-      "840134215932536243379996346583325877967096332754920644690380762219607476"
-      "364289411435920190573960677507881394607489905331729758013432992987184764"
-      "607375889434313483382966801515156280854162691766195737493173453603519594"
-      "496000000000000000000000000000000000000000000000000");
+TEST(Arithmetic, Division) {
+  bigint::big_integer fac50("3041409320171337804361260816606476884437764156896"
+      "0512000000000000");
+  bigint::big_integer fac100("870978248908948007941659016194448586556972064394"
+      "084013421593253624337999634658332587796709633275492064469038076221960747"
+      "636428941143592019057396067750788139460748990533172975801343299298718476"
+      "460737588943431348338296680151515628085416269176619573749317345360351959"
+      "4496000000000000000000000000000000000000000000000000");
 
-  ntlib::big_integer a = fac50 / fac100;
-  assert(a.to_string() == "0");
-  ntlib::big_integer b = fac100 / fac50;
-  assert(b * fac50 == fac100);
+  bigint::big_integer a = fac50 / fac100;
+  EXPECT_EQ(a.to_string(), "0");
+  bigint::big_integer b = fac100 / fac50;
+  EXPECT_EQ(b * fac50, fac100);
 
-  try {
-    fac100 / 0;
-    assert(false);
-  } catch (const std::exception& e) {}
-
-  try {
-    ntlib::big_integer zero;
-    fac100 / zero;
-    assert(false);
-  } catch (const std::exception& e) {}
+  EXPECT_ANY_THROW(fac100 / 0);
+  bigint::big_integer zero;
+  EXPECT_ANY_THROW(fac100 / zero);
 }
 
-void test_modulo() {
-  ntlib::big_integer fac50("30414093201713378043612608166064768844377641568960"
-      "512000000000000");
-  ntlib::big_integer fac100("8709782489089480079416590161944485865569720643940"
-      "840134215932536243379996346583325877967096332754920644690380762219607476"
-      "364289411435920190573960677507881394607489905331729758013432992987184764"
-      "607375889434313483382966801515156280854162691766195737493173453603519594"
-      "496000000000000000000000000000000000000000000000000");
+TEST(Arithmetic, Modulo) {
+  bigint::big_integer fac50("3041409320171337804361260816606476884437764156896"
+      "0512000000000000");
+  bigint::big_integer fac100("870978248908948007941659016194448586556972064394"
+      "084013421593253624337999634658332587796709633275492064469038076221960747"
+      "636428941143592019057396067750788139460748990533172975801343299298718476"
+      "460737588943431348338296680151515628085416269176619573749317345360351959"
+      "4496000000000000000000000000000000000000000000000000");
 
-  assert((fac100 % 17).to_string() == "0");
-  assert((fac100 % fac50).to_string() == "0");
+  EXPECT_EQ((fac100 % 17).to_string(), "0");
+  EXPECT_EQ((fac100 % fac50).to_string(), "0");
 
-  ntlib::big_integer a(7);
-  ntlib::big_integer b(3);
-  assert((a % b).to_string() == "1");
-  assert((-a % b).to_string() == "-1");
-  assert((a % -b).to_string() == "1");
-  assert((-a % -b).to_string() == "-1");
+  EXPECT_ANY_THROW(fac100 % 0);
+  bigint::big_integer zero;
+  EXPECT_ANY_THROW(fac100 % zero);
 }
 
-void test_logical_operators() {
-  ntlib::big_integer zero(0);
-  ntlib::big_integer one(1);
-
-  assert(!zero);
-  assert(!!one);
-  assert(one && one);
-  assert(one || zero);
-  assert(!(zero || zero));
+TEST(Operators, Comparison) {
+  bigint::big_integer a("12345678910111213141516171819");
+  bigint::big_integer b("19181716151413121110987654321");
+  bigint::big_integer c("12345678910111213141516171819");
+  bigint::big_integer d("-12345678910111213141516171819");
+  EXPECT_TRUE(a != d);
+  EXPECT_TRUE(a == a);
+  EXPECT_TRUE(a == c);
+  EXPECT_TRUE(a != b);
+  EXPECT_TRUE(a < b);
+  EXPECT_TRUE(b > a);
+  EXPECT_TRUE(a <= b);
+  EXPECT_TRUE(b >= a);
+  EXPECT_TRUE(a <= c);
+  EXPECT_TRUE(c >= a);
 }
 
-void test_bitwise_operations() {
-  ntlib::big_integer a("12345678910111213141516171819");
-  ntlib::big_integer zero(0);
-  assert(a == ~~a);
-  assert((a & zero).to_string() == "0");
-  assert((a | zero) == a);
+TEST(Operators, Logic) {
+  bigint::big_integer zero(0);
+  bigint::big_integer one(1);
+
+  EXPECT_TRUE(!zero);
+  EXPECT_TRUE(!!one);
+  EXPECT_TRUE(one && one);
+  EXPECT_TRUE(one || zero);
+  EXPECT_TRUE(!(zero || zero));
 }
 
-void test_shifts() {
-  ntlib::big_integer a("12345678910111213141516171819");
+TEST(Operators, Bitwise) {
+  bigint::big_integer a("12345678910111213141516171819");
+  bigint::big_integer zero(0);
+  EXPECT_EQ(a, ~~a);
+  EXPECT_EQ((a & zero).to_string(), "0");
+  EXPECT_EQ((a | zero), a);
+}
+
+TEST(Operators, Shifts) {
+  bigint::big_integer a("12345678910111213141516171819");
   a <<= 1;
-  assert(a.to_string() == "24691357820222426283032343638");
+  EXPECT_EQ(a.to_string(), "24691357820222426283032343638");
   a <<= 59;
-  assert(a.to_string() == "14233598704438438575649355172504444699456569344");
+  EXPECT_EQ(a.to_string(), "14233598704438438575649355172504444699456569344");
   a >>= 1;
-  assert(a.to_string() == "7116799352219219287824677586252222349728284672");
+  EXPECT_EQ(a.to_string(), "7116799352219219287824677586252222349728284672");
   a >>= 59;
-  assert(a.to_string() == "12345678910111213141516171819");
+  EXPECT_EQ(a.to_string(), "12345678910111213141516171819");
 
-  ntlib::big_integer b("19181716151413121110987654321");
+  bigint::big_integer b("19181716151413121110987654321");
   b <<= 64;
-  assert(b.to_string() == "353840208739658780121431168289984594912514932736");
+  EXPECT_EQ(b.to_string(), "353840208739658780121431168289984594912514932736");
   b >>= 32;
   b >>= 32;
-  assert(b.to_string() == "19181716151413121110987654321");
-}
-
-int main() {
-  test_initialization();
-  test_to_string();
-  test_comparison();
-  test_addition();
-  test_subtraction();
-  test_multiplication();
-  test_division();
-  test_modulo();
-  test_logical_operators();
-  test_bitwise_operations();
-  test_shifts();
-
-  return 0;
+  EXPECT_EQ(b.to_string(), "19181716151413121110987654321");
 }

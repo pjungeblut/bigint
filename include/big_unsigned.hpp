@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-namespace ntlib {
+namespace bigint {
 
 /**
  * Represents a natural number whose size is only limited by the computers
